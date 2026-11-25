@@ -116,4 +116,3 @@ git push origin feature/hebrew-rtl
 ```
 
 Resolve any merge conflicts normally and re-test; future upstream changes cannot be guaranteed conflict-free. Merging rather than rebasing avoids rewriting the published feature branch.
-
