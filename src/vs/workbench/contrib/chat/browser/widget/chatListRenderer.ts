@@ -3280,7 +3280,7 @@ export class ChatListItemRenderer extends Disposable implements ITreeRenderer<Ch
 		let contentContainer = templateData.value;
 		if (requestSummary && !isStickyScrollRow) {
 			const details = dom.append(contentContainer, dom.$<HTMLDetailsElement>('details.chat-request-disclosure'));
-			const summary = dom.append(details, dom.$('summary', undefined, requestSummary));
+			const summary = dom.append(details, dom.$('summary', { dir: 'auto' }, requestSummary));
 			details.open = this.requestDisclosureState.get(element) ?? false;
 			const updateExpansionState = () => {
 				this.requestDisclosureState.set(element, details.open);
@@ -3313,7 +3313,7 @@ export class ChatListItemRenderer extends Disposable implements ITreeRenderer<Ch
 			const editingTextContent = dom.$('span', undefined, editingText);
 
 			const container = dom.$('.rendered-markdown');
-			const innerContent = dom.$('.chat-request-text');
+			const innerContent = dom.$('.chat-request-text', { dir: 'auto' });
 			innerContent.classList.add('sticky-editing');
 			innerContent.appendChild(editingTextContent);
 			container.appendChild(innerContent);

@@ -3208,6 +3208,11 @@ declare namespace monaco.editor {
 	 */
 	export interface IEditorOptions {
 		/**
+		 * Base text direction. Auto detects each logical line independently.
+		 * Defaults to auto.
+		 */
+		textDirection?: 'auto' | 'ltr' | 'rtl';
+		/**
 		 * This editor is used inside a diff editor.
 		 */
 		inDiffEditor?: boolean;
@@ -5308,7 +5313,8 @@ declare namespace monaco.editor {
 		effectiveAllowVariableFonts = 176,
 		doubleClickSelectsBlock = 177,
 		fullwidthCharacterWidth = 178,
-		effectiveFullwidthCharacterWidth = 179
+		effectiveFullwidthCharacterWidth = 179,
+		textDirection = 180
 	}
 
 	export const EditorOptions: {
@@ -5492,6 +5498,7 @@ declare namespace monaco.editor {
 		effectiveEditContextEnabled: IEditorOption<EditorOption.effectiveEditContext, boolean>;
 		effectiveAllowVariableFonts: IEditorOption<EditorOption.effectiveAllowVariableFonts, boolean>;
 		effectiveFullwidthCharacterWidth: IEditorOption<EditorOption.effectiveFullwidthCharacterWidth, 'font' | 'twoCells'>;
+		textDirection: IEditorOption<EditorOption.textDirection, 'auto' | 'ltr' | 'rtl'>;
 	};
 
 	type EditorOptionsType = typeof EditorOptions;

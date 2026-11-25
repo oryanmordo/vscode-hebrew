@@ -33,6 +33,57 @@ suite('MarkdownRenderer', () => {
 
 	const store = ensureNoDisposablesAreLeakedInTestSuite();
 
+	suite('bidirectional text', () => {
+		test('detects each prose block independently while isolating code', () => {
+			const result = store.add(renderMarkdown({ value: '# שלום\n\nHello world\n\nשלום `world()`!\n\n- פריט\n\n> ציטוט\n\n| עברית | English |\n| --- | --- |\n| שלום | hello |\n\n```\nשלום\n```' })).element;
+			assert.deepStrictEqual(
+				Array.from(result.querySelectorAll('h1, p, li, ul, blockquote, th, td, pre'), element => [element.tagName, element.getAttribute('dir')]),
+				[
+					['H1', 'auto'], ['P', 'auto'], ['P', 'auto'], ['UL', 'rtl'], ['LI', 'rtl'],
+					['BLOCKQUOTE', 'rtl'], ['P', 'auto'], ['TH', 'auto'], ['TH', 'auto'],
+					['TD', 'auto'], ['TD', 'auto'], ['PRE', 'ltr']
+				]
+			);
+		});
+
+		test('preserves explicit directions and rejects invalid direction attributes', () => {
+			const result = store.add(renderMarkdown(new MarkdownString('<p dir="ltr">שלום</p><p dir="rtl">hello</p><p dir="invalid">שלום</p>', { supportHtml: true }))).element;
+			assert.deepStrictEqual(Array.from(result.querySelectorAll('p'), element => element.dir), ['ltr', 'rtl', 'auto']);
+		});
+
+		test('isolates a synchronous embedded code editor from its RTL parent', () => {
+			const code = document.createElement('div');
+			code.textContent = 'שלום';
+			const result = store.add(renderMarkdown({ value: '> שלום\n>\n> ```\n> שלום\n> ```' }, {
+				codeBlockRendererSync: () => code
+			})).element;
+			assert.strictEqual(code.parentElement?.getAttribute('dir'), 'ltr');
+			assert.strictEqual(result.querySelector('blockquote')?.dir, 'rtl');
+		});
+
+		test('recomputes direction when a streaming render changes language', () => {
+			const target = document.createElement('div');
+			store.add(renderMarkdown({ value: 'hello' }, {}, target));
+			store.add(renderMarkdown({ value: 'שלום' }, { fillInIncompleteTokens: true }, target));
+			const hebrew = target.querySelector('p')?.dir;
+			store.add(renderMarkdown({ value: 'hello' }, {}, target));
+			assert.deepStrictEqual([hebrew, target.querySelector('p')?.dir], ['auto', '']);
+		});
+
+		test('mixed loose lists keep independently directed markers and paragraphs', () => {
+			const result = store.add(renderMarkdown({ value: '- שלום עולם\n\n- Hello world\n\n> שלום\n\n| עברית | English |\n| --- | --- |\n| שלום | hello |' })).element;
+			document.body.appendChild(result);
+			try {
+				assert.deepStrictEqual(
+					Array.from(result.querySelectorAll('ul, li, li > p, blockquote, th, td'), element => getComputedStyle(element).direction),
+					['rtl', 'rtl', 'rtl', 'ltr', 'ltr', 'rtl', 'rtl', 'ltr', 'rtl', 'ltr']
+				);
+			} finally {
+				result.remove();
+			}
+		});
+	});
+
 	suite('Sanitization', () => {
 		test('Should not render images with unknown schemes', () => {
 			const markdown = { value: `![image](no-such://example.com/cat.gif)` };

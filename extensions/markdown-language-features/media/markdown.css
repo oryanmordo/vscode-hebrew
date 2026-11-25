@@ -15,6 +15,21 @@ body {
 	padding-top: 1em;
 }
 
+[dir]:not([align]) {
+	text-align: start;
+}
+
+ul, ol {
+	padding-inline-start: 2em;
+	padding-inline-end: 0;
+}
+
+pre, pre code {
+	direction: ltr;
+	unicode-bidi: isolate;
+	text-align: left;
+}
+
 /* Reset margin top for elements */
 h1, h2, h3, h4, h5, h6,
 p, ol, ul, pre {
@@ -380,7 +395,7 @@ table {
 }
 
 th {
-	text-align: left;
+	text-align: start;
 	border-bottom: 1px solid;
 }
 
@@ -395,9 +410,10 @@ table > tbody > tr + tr > td {
 
 blockquote {
 	margin: 0;
-	padding: 0px 16px 0 10px;
-	border-left-width: 5px;
-	border-left-style: solid;
+	padding-block: 0;
+	padding-inline: 10px 16px;
+	border-inline-start-width: 5px;
+	border-inline-start-style: solid;
 	border-radius: 2px;
 }
 

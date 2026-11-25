@@ -4164,6 +4164,7 @@ export class ChatInputPart extends Disposable implements IHistoryNavigationWidge
 		options.overflowWidgetsDomNode = this.options.editorOverflowWidgetsDomNode;
 		options.pasteAs = EditorOptions.pasteAs.defaultValue;
 		options.readOnly = false;
+		options.textDirection = 'auto';
 		options.ariaLabel = this._getAriaLabel();
 		options.fontFamily = DEFAULT_FONT_FAMILY;
 		options.padding = this._getInputEditorPadding();

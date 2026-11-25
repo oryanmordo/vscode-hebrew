@@ -327,6 +327,18 @@ suite('Strings', () => {
 		assert.strictEqual(strings.containsRTL('זוהי עובדה מבוססת שדעתו'), true);
 	});
 
+	test('startsWithRTL ignores neutral prefixes and Hebrew combining marks', () => {
+		assert.deepStrictEqual([
+			'', '123 !?', 'hello שלום', 'שלום world', '123 (שָׁלוֹם!)',
+			'📚 ... שלום', '\u05b0שלום', '١٢٣ مرحبا', '\u200eשלום', '\u200fhello',
+			'日本語 שלום', 'const greeting = "שלום";', '\u05behello'
+		].map(strings.startsWithRTL), [
+			false, false, false, true, true,
+			true, true, true, false, true,
+			false, false, true
+		]);
+	});
+
 	test('issue #115221: isEmojiImprecise misses ⭐', () => {
 		const codePoint = strings.getNextCodePoint('⭐', '⭐'.length, 0);
 		assert.strictEqual(strings.isEmojiImprecise(codePoint), true);

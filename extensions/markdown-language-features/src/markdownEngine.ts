@@ -20,11 +20,31 @@ import { isOfScheme, Schemes } from './util/schemes';
 const pluginSourceMap: MarkdownIt.PluginSimple = (md): void => {
 	// Set the attribute on every possible token.
 	md.core.ruler.push('source_map_data_attribute', (state): void => {
-		for (const token of state.tokens) {
+		for (const [index, token] of state.tokens.entries()) {
 			if (token.map && token.type !== 'inline') {
 				token.attrSet('data-line', String(token.map[0]));
 				token.attrJoin('class', 'code-line');
-				token.attrJoin('dir', 'auto');
+				token.attrSet('dir', token.type === 'fence' || token.type === 'code_block' ? 'ltr' : 'auto');
+				if (['bullet_list_open', 'ordered_list_open', 'list_item_open', 'blockquote_open'].includes(token.type)) {
+					// dir=auto skips children with their own dir, including loose-list paragraphs.
+					for (let childIndex = index + 1; childIndex < state.tokens.length; childIndex++) {
+						const child = state.tokens[childIndex];
+						if (child.level <= token.level) {
+							break;
+						}
+						if (child.type === 'inline') {
+							const text = child.children?.filter(part => part.type === 'text' || part.type === 'code_inline').map(part => part.content).join('') ?? child.content;
+							const firstStrong = text.match(/[\p{L}\u200e\u200f]/u)?.[0];
+							if (firstStrong) {
+								token.attrSet('dir', /[\p{Script=Hebrew}\p{Script=Arabic}\u200f]/u.test(firstStrong) ? 'rtl' : 'ltr');
+							}
+							break;
+						}
+					}
+				}
+			}
+			if ((token.type === 'td_open' || token.type === 'th_open') && token.attrGet('dir') === null) {
+				token.attrSet('dir', 'auto');
 			}
 		}
 	});

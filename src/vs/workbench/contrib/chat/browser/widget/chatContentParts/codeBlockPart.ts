@@ -448,6 +448,7 @@ export class CodeBlockPart extends Disposable {
 			? { vertical: 'auto', verticalScrollbarSize: defaultChatScrollbarSize, ...renderOptions?.editorOptions?.scrollbar }
 			: undefined;
 		return {
+			textDirection: 'ltr',
 			wordWrap: this.editorOptions.configuration.resultEditor.wordWrap,
 			fontLigatures: this.editorOptions.configuration.resultEditor.fontLigatures,
 			bracketPairColorization: this.editorOptions.configuration.resultEditor.bracketPairColorization,

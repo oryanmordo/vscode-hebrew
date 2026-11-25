@@ -305,6 +305,10 @@ export class ViewModel extends Disposable implements IViewModel {
 			eventsCollector.emitViewEvent(new viewEvents.ViewDecorationsChangedEvent(null));
 		}
 
+		if (e.hasChanged(EditorOption.textDirection)) {
+			eventsCollector.emitViewEvent(new viewEvents.ViewFlushedEvent());
+		}
+
 		eventsCollector.emitViewEvent(new viewEvents.ViewConfigurationChangedEvent(e));
 		this.viewLayout.onConfigurationChanged(e);
 
@@ -858,6 +862,7 @@ export class ViewModel extends Disposable implements IViewModel {
 
 	private _getTextDirection(lineNumber: number, decorations: ViewModelDecoration[]): TextDirection {
 		let rtlCount = 0;
+		let hasExplicitDirection = false;
 
 		for (const decoration of decorations) {
 			const range = decoration.range;
@@ -866,13 +871,23 @@ export class ViewModel extends Disposable implements IViewModel {
 			}
 			const textDirection = decoration.options.textDirection;
 			if (textDirection === TextDirection.RTL) {
+				hasExplicitDirection = true;
 				rtlCount++;
 			} else if (textDirection === TextDirection.LTR) {
+				hasExplicitDirection = true;
 				rtlCount--;
 			}
 		}
 
-		return rtlCount > 0 ? TextDirection.RTL : TextDirection.LTR;
+		if (hasExplicitDirection) {
+			return rtlCount > 0 ? TextDirection.RTL : TextDirection.LTR;
+		}
+		const direction = this._configuration.options.get(EditorOption.textDirection);
+		if (direction !== 'auto') {
+			return direction === 'rtl' ? TextDirection.RTL : TextDirection.LTR;
+		}
+		const modelPosition = this.coordinatesConverter.convertViewPositionToModelPosition(new Position(lineNumber, this.getLineMinColumn(lineNumber)));
+		return strings.startsWithRTL(this.model.getLineContent(modelPosition.lineNumber)) ? TextDirection.RTL : TextDirection.LTR;
 	}
 
 	public getTextDirection(lineNumber: number): TextDirection {

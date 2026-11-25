@@ -16,7 +16,7 @@ import { FileAccess, matchesSomeScheme, Schemas } from '../common/network.js';
 import { cloneAndChange } from '../common/objects.js';
 import { basename as pathBasename } from '../common/path.js';
 import { basename } from '../common/resources.js';
-import { escape } from '../common/strings.js';
+import { containsRTL, escape, startsWithRTL } from '../common/strings.js';
 import { URI } from '../common/uri.js';
 import * as DOM from './dom.js';
 import * as domSanitize from './domSanitize.js';
@@ -257,6 +257,23 @@ export function renderMarkdown(markdown: IMarkdownString, options: MarkdownRende
 	const renderedContent = document.createElement('div');
 	const sanitizerConfig = getDomSanitizerConfig(markdown, options.sanitizerConfig ?? {});
 	domSanitize.safeSetInnerHtml(renderedContent, renderedMarkdown, sanitizerConfig);
+
+	if (containsRTL(renderedContent.textContent ?? '')) {
+		// Set direction after sanitization, before inserting custom code renderers.
+		// eslint-disable-next-line eslint-js/no-restricted-syntax
+		for (const element of renderedContent.querySelectorAll<HTMLElement>('p, h1, h2, h3, h4, h5, h6, li, ul, ol, blockquote, td, th, summary, dt, dd')) {
+			if (!element.hasAttribute('dir') && !element.closest('pre, [data-code]')) {
+				// dir=auto ignores descendants that have their own dir attribute.
+				element.dir = /^(LI|UL|OL|BLOCKQUOTE|DT|DD)$/.test(element.tagName)
+					? (startsWithRTL(element.textContent ?? '') ? 'rtl' : 'ltr')
+					: 'auto';
+			}
+		}
+		// eslint-disable-next-line eslint-js/no-restricted-syntax
+		for (const element of renderedContent.querySelectorAll<HTMLElement>('pre, [data-code]')) {
+			element.dir = 'ltr';
+		}
+	}
 
 	// Rewrite links and images before potentially inserting them into the real dom
 	rewriteRenderedLinks(markdown, options, renderedContent, disposables);
@@ -714,6 +731,10 @@ export const allowedMarkdownHtmlAttributes = Object.freeze<Array<string | domSan
 	'colspan',
 	'controls',
 	'draggable',
+	{
+		attributeName: 'dir',
+		shouldKeep: (_element, data) => /^(auto|ltr|rtl)$/.test(data.attrValue)
+	},
 	'height',
 	'href',
 	'loop',

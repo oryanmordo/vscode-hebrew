@@ -692,6 +692,25 @@ export function containsRTL(str: string): boolean {
 	return CONTAINS_RTL.test(str);
 }
 
+/**
+ * Returns whether the first strong directional character is right-to-left.
+ * Numbers, combining marks and neutral punctuation do not determine the direction.
+ */
+export function startsWithRTL(str: string): boolean {
+	if (!containsRTL(str)) {
+		return false;
+	}
+	for (const character of str) {
+		if (containsRTL(character)) {
+			return true;
+		}
+		if (/[\p{L}\u200e]/u.test(character)) {
+			return false;
+		}
+	}
+	return false;
+}
+
 const IS_BASIC_ASCII = /^[\t\n\r\x20-\x7E]*$/;
 /**
  * Returns true if `str` contains only basic ASCII characters in the range 32 - 126 (including 32 and 126) or \n, \r, \t

@@ -52,6 +52,11 @@ export const enum EditorAutoIndentStrategy {
  */
 export interface IEditorOptions {
 	/**
+	 * Base text direction. Auto detects each logical line independently.
+	 * Defaults to auto.
+	 */
+	textDirection?: 'auto' | 'ltr' | 'rtl';
+	/**
 	 * This editor is used inside a diff editor.
 	 */
 	inDiffEditor?: boolean;
@@ -6151,10 +6156,24 @@ export const enum EditorOption {
 	doubleClickSelectsBlock,
 	fullwidthCharacterWidth,
 	// Must come after `fullwidthCharacterWidth`, which it is computed from.
-	effectiveFullwidthCharacterWidth
+	effectiveFullwidthCharacterWidth,
+	textDirection
 }
 
 export const EditorOptions = {
+	textDirection: register(new EditorStringEnumOption(
+		EditorOption.textDirection, 'textDirection',
+		'auto' as 'auto' | 'ltr' | 'rtl',
+		['auto', 'ltr', 'rtl'] as const,
+		{
+			description: nls.localize('textDirection', "Controls the base text direction. Auto detects each logical line from its first strong directional character. Wrapped lines keep the direction of their logical line."),
+			enumDescriptions: [
+				nls.localize('textDirection.auto', "Detect the direction of each logical line automatically."),
+				nls.localize('textDirection.ltr', "Use left-to-right text direction."),
+				nls.localize('textDirection.rtl', "Use right-to-left text direction.")
+			]
+		}
+	)),
 	acceptSuggestionOnCommitCharacter: register(new EditorBooleanOption(
 		EditorOption.acceptSuggestionOnCommitCharacter, 'acceptSuggestionOnCommitCharacter', true,
 		{ markdownDescription: nls.localize('acceptSuggestionOnCommitCharacter', "Controls whether suggestions should be accepted on commit characters. For example, in JavaScript, the semi-colon (`;`) can be a commit character that accepts a suggestion and types that character.") }

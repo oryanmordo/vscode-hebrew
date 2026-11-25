@@ -19,3 +19,18 @@
 .rendered-markdown li:has(input[type=checkbox]) {
 	list-style-type: none;
 }
+
+.rendered-markdown [dir]:not([align]) {
+	text-align: start;
+}
+
+.rendered-markdown :where(ul, ol)[dir] {
+	padding-inline-start: 2em;
+	padding-inline-end: 0;
+}
+
+.rendered-markdown :where(pre, [data-code]) {
+	direction: ltr;
+	unicode-bidi: isolate;
+	text-align: left;
+}

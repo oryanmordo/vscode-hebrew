@@ -10,6 +10,7 @@ import { assertSnapshot } from '../../../../base/test/common/snapshot.js';
 import { ensureNoDisposablesAreLeakedInTestSuite } from '../../../../base/test/common/utils.js';
 import { OffsetRange } from '../../../common/core/ranges/offsetRange.js';
 import { MetadataConsts } from '../../../common/encodedTokenAttributes.js';
+import { TextDirection } from '../../../common/model.js';
 import { IViewLineTokens } from '../../../common/tokens/lineTokens.js';
 import { LineDecoration } from '../../../common/viewLayout/lineDecorations.js';
 import { CharacterMapping, DomPosition, IRenderLineInputOptions, RenderLineInput, RenderLineOutput2, renderViewLine2 as renderViewLine } from '../../../common/viewLayout/viewLineRenderer.js';
@@ -120,6 +121,18 @@ function createRenderLineInput(opts: IRelaxedRenderLineInputOptions): RenderLine
 suite('renderViewLine', () => {
 
 	ensureNoDisposablesAreLeakedInTestSuite();
+
+	test('bidirectional text keeps RTL prose tokens in one paragraph while isolating code tokens', () => {
+		const options = {
+			lineContent: 'שלום עולם',
+			isBasicASCII: false,
+			containsRTL: true,
+			lineTokens: createViewLineTokens([createPart(5, 1), createPart(9, 2)])
+		};
+		const rtl = renderViewLine(createRenderLineInput({ ...options, textDirection: TextDirection.RTL }));
+		const ltr = renderViewLine(createRenderLineInput({ ...options, textDirection: TextDirection.LTR }));
+		assert.deepStrictEqual([rtl.html.includes('unicode-bidi:isolate'), ltr.html.includes('unicode-bidi:isolate')], [false, true]);
+	});
 
 	function assertCharacterReplacement(lineContent: string, tabSize: number, expected: string, expectedCharOffsetInPart: number[]): void {
 		const _actual = renderViewLine(createRenderLineInput({

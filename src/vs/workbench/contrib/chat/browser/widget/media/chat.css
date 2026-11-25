@@ -735,9 +735,10 @@
 /* NOTE- BLOCKQUOTE_HORIZONTAL_INSET in chatMarkdownContentPart.ts sizes request code blocks to this padding and border */
 .interactive-item-container .value .rendered-markdown blockquote {
 	margin: 0px;
-	padding: 0px 16px 0 10px;
-	border-left-width: 5px;
-	border-left-style: solid;
+	padding-block: 0;
+	padding-inline: 10px 16px;
+	border-inline-start-width: 5px;
+	border-inline-start-style: solid;
 	border-radius: var(--vscode-cornerRadius-xSmall);
 	background: var(--vscode-textBlockQuote-background);
 	border-color: var(--vscode-textBlockQuote-border);
@@ -1081,7 +1082,12 @@
 }
 
 .interactive-item-container .value .rendered-markdown li {
+	--chat-list-rtl: 0;
 	margin: 4px 0;
+}
+
+.interactive-item-container .value .rendered-markdown li:dir(rtl) {
+	--chat-list-rtl: 1;
 }
 
 /* Codeblocks only carry a bottom margin (see codeBlockPart.css) and rely on the previous element's bottom
@@ -1097,29 +1103,32 @@ following list content ends up with no space above it. Add a matching top margin
 
 /* NOTE- We want to dedent codeblocks in lists specifically to give them the full width. No more elegant way to do this, these values
 have to be updated for changes to the rules above, or to support more deeply nested lists. */
-.interactive-item-container .value .rendered-markdown ul .interactive-result-code-block {
-	margin-left: -24px;
-	/* The dedented block is wider than the list item */
+.interactive-item-container .value .rendered-markdown :is(ul, ol) .interactive-result-code-block {
+	/* Code stays LTR; dedentation follows the containing list item's direction. */
+	margin-left: calc(var(--chat-list-code-indent) * (1 - var(--chat-list-rtl, 0)));
+	margin-right: calc(var(--chat-list-code-indent) * var(--chat-list-rtl, 0));
 	max-width: none;
+}
+
+.interactive-item-container .value .rendered-markdown ul .interactive-result-code-block {
+	--chat-list-code-indent: -24px;
 }
 
 .interactive-item-container .value .rendered-markdown ul ul .interactive-result-code-block {
-	margin-left: -48px;
+	--chat-list-code-indent: -48px;
 }
 
 .interactive-item-container .value .rendered-markdown ol .interactive-result-code-block {
-	margin-left: -28px;
-	/* The dedented block is wider than the list item */
-	max-width: none;
+	--chat-list-code-indent: -28px;
 }
 
 .interactive-item-container .value .rendered-markdown ol ol .interactive-result-code-block {
-	margin-left: -56px;
+	--chat-list-code-indent: -56px;
 }
 
 .interactive-item-container .value .rendered-markdown ol ul .interactive-result-code-block,
 .interactive-item-container .value .rendered-markdown ul ol .interactive-result-code-block {
-	margin-left: -52px;
+	--chat-list-code-indent: -52px;
 }
 
 /* #endregion list indent rules */

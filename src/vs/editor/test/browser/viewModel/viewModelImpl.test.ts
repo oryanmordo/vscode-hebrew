@@ -7,7 +7,7 @@ import assert from 'assert';
 import { ensureNoDisposablesAreLeakedInTestSuite } from '../../../../base/test/common/utils.js';
 import { Position } from '../../../common/core/position.js';
 import { Range } from '../../../common/core/range.js';
-import { EndOfLineSequence, PositionAffinity } from '../../../common/model.js';
+import { EndOfLineSequence, PositionAffinity, TextDirection } from '../../../common/model.js';
 import { ViewEventHandler } from '../../../common/viewEventHandler.js';
 import { ViewEvent } from '../../../common/viewEvents.js';
 import { testViewModel } from './testViewModel.js';
@@ -18,6 +18,52 @@ import { createCodeEditorServices, instantiateTestCodeEditor } from '../testCode
 suite('ViewModel', () => {
 
 	ensureNoDisposablesAreLeakedInTestSuite();
+
+	suite('bidirectional text', () => {
+		test('detects Hebrew per logical line without reversing English code', () => {
+			testViewModel(['שלום עולם', 'Hello שלום', '123 (שלום!)', 'const greeting = "שלום";', ''], {}, viewModel => {
+				assert.deepStrictEqual([1, 2, 3, 4, 5].map(line => viewModel.getTextDirection(line)), [
+					TextDirection.RTL, TextDirection.LTR, TextDirection.RTL, TextDirection.LTR, TextDirection.LTR
+				]);
+			});
+		});
+
+		test('wrapped continuations retain the logical paragraph direction', () => {
+			testViewModel(['שלום world world world world world world world world world world'], { wordWrap: 'wordWrapColumn', wordWrapColumn: 12 }, viewModel => {
+				assert.ok(viewModel.getLineCount() > 1);
+				assert.deepStrictEqual(
+					Array.from({ length: viewModel.getLineCount() }, (_, index) => viewModel.getTextDirection(index + 1)),
+					Array(viewModel.getLineCount()).fill(TextDirection.RTL)
+				);
+			});
+		});
+
+		test('updates direction after edits and configuration changes', () => {
+			testViewModel(['hello'], {}, (viewModel, model, configuration) => {
+				model.applyEdits([{ range: model.getFullModelRange(), text: 'שלום' }]);
+				const automatic = viewModel.getTextDirection(1);
+				configuration.updateOptions({ textDirection: 'ltr' });
+				const leftToRight = viewModel.getTextDirection(1);
+				configuration.updateOptions({ textDirection: 'rtl' });
+				model.applyEdits([{ range: model.getFullModelRange(), text: 'hello' }]);
+				assert.deepStrictEqual([automatic, leftToRight, viewModel.getTextDirection(1)], [
+					TextDirection.RTL, TextDirection.LTR, TextDirection.RTL
+				]);
+			});
+		});
+
+		test('explicit direction decorations override automatic and forced direction', () => {
+			testViewModel(['שלום', 'hello'], { textDirection: 'rtl' }, (viewModel, model) => {
+				model.deltaDecorations([], [
+					{ range: new Range(1, 1, 1, 5), options: { description: 'ltr-test', textDirection: TextDirection.LTR } },
+					{ range: new Range(2, 1, 2, 6), options: { description: 'rtl-test', textDirection: TextDirection.RTL } }
+				]);
+				assert.deepStrictEqual([viewModel.getTextDirection(1), viewModel.getTextDirection(2)], [
+					TextDirection.LTR, TextDirection.RTL
+				]);
+			});
+		});
+	});
 
 	test('issue #21073: SplitLinesCollection: attempt to access a \'newer\' model', () => {
 		const text = [''];

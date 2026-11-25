@@ -28,6 +28,23 @@ suite('markdown.engine', () => {
 			const engine = createNewMarkdownEngine();
 			assert.strictEqual((await engine.render(input)).html, output);
 		});
+
+		test('Keeps Hebrew code fences LTR and detects table cells independently', async () => {
+			const engine = createNewMarkdownEngine();
+			const { html } = await engine.render('# שלום\n\n| עברית | English |\n| --- | --- |\n| שלום | hello |\n\n```\nשלום\n```');
+			assert.ok(html.includes('<th dir="auto">עברית</th>'));
+			assert.ok(html.includes('<td dir="auto">שלום</td>'));
+			assert.match(html, /<pre><code[^>]*dir="ltr"[^>]*>שלום/);
+		});
+
+		test('Directs loose list markers and quotations from their first inline text', async () => {
+			const engine = createNewMarkdownEngine();
+			const { html } = await engine.render('- שלום עולם\n\n- Hello world\n\n> **שלום** עולם');
+			assert.deepStrictEqual(
+				Array.from(html.matchAll(/<(ul|li|blockquote)\b[^>]*\bdir="([^"]+)"/g), match => [match[1], match[2]]),
+				[['ul', 'rtl'], ['li', 'rtl'], ['li', 'ltr'], ['blockquote', 'rtl']]
+			);
+		});
 	});
 
 	suite('image-caching', () => {

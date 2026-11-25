@@ -465,7 +465,8 @@ class ResolvedRenderLineInput {
 		public readonly renderSpaceCharCode: number,
 		public readonly renderWhitespace: RenderWhitespace,
 		public readonly renderControlCharacters: boolean,
-		public readonly useTwoCellFullwidthCharacters: boolean
+		public readonly useTwoCellFullwidthCharacters: boolean,
+		public readonly textDirection: TextDirection | null
 	) {
 		//
 	}
@@ -546,7 +547,8 @@ function resolveRenderLineInput(input: RenderLineInput): ResolvedRenderLineInput
 		input.renderSpaceCharCode,
 		input.renderWhitespace,
 		input.renderControlCharacters,
-		input.useTwoCellFullwidthCharacters
+		input.useTwoCellFullwidthCharacters,
+		input.textDirection
 	);
 }
 
@@ -1064,7 +1066,7 @@ function _renderLine(input: ResolvedRenderLineInput, sb: StringBuilder): RenderL
 		charOffsetInPart = 0;
 
 		sb.appendString('<span ');
-		if (partContainsRTL) {
+		if (partContainsRTL && input.textDirection !== TextDirection.RTL) {
 			sb.appendString('style="unicode-bidi:isolate" ');
 		} else if (partIsCenteredFullWidth) {
 			sb.appendString('style="width:');
